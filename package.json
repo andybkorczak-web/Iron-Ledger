@@ -1,0 +1,52 @@
+{
+  "name": "iron-ledger",
+  "productName": "Iron Ledger",
+  "version": "1.0.0",
+  "description": "Interactive 6-week fat-loss & muscle-building programme with a built-in circuit timer and progress tracker.",
+  "main": "main.js",
+  "author": "Iron Ledger <noreply@ironledger.app>",
+  "homepage": "https://github.com/ironledger/iron-ledger",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.ironledger.app",
+    "productName": "Iron Ledger",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "app/**/*",
+      "build/icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "build/icon.png",
+      "target": ["dmg"]
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": ["nsis"]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Health",
+      "target": ["AppImage", "deb"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

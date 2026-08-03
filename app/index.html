@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Iron Ledger</title>
+<meta name="theme-color" content="#12151A">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12151A;
+    --ink-2:#1B2027;
+    --ink-3:#242B34;
+    --steel:#3A4250;
+    --steel-soft:#2A313B;
+    --brass:#C9A15A;
+    --brass-bright:#E4C07E;
+    --brass-dim:#8A6F3E;
+    --chalk:#F3EFE6;
+    --chalk-dim:#A8ADB6;
+    --ember:#C1533E;
+    --sage:#6FA287;
+    --radius:2px;
+    --display:'Oswald', 'Arial Narrow', sans-serif;
+    --body:'Inter', -apple-system, sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--ink); color:var(--chalk); font-family:var(--body); -webkit-font-smoothing:antialiased;}
+  body{min-height:100vh; padding-bottom:60px;}
+  ::selection{background:var(--brass); color:var(--ink);}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  input, textarea{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:rgba(18,21,26,0.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--steel-soft);
+  }
+  .topbar-inner{max-width:1100px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .wordmark{font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:2px; color:var(--chalk); white-space:nowrap;}
+  .wordmark span{color:var(--brass);}
+  .nav{display:flex; gap:4px; overflow-x:auto; flex:1; scrollbar-width:none;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nav-btn{
+    background:none; border:1px solid transparent; color:var(--chalk-dim);
+    font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:1px;
+    padding:8px 12px; border-radius:var(--radius); white-space:nowrap; transition:all .15s ease;
+  }
+  .nav-btn:hover{color:var(--chalk); border-color:var(--steel);}
+  .nav-btn.active{background:var(--brass); color:var(--ink); border-color:var(--brass);}
+
+  .backup-actions{display:flex; gap:6px; flex-shrink:0;}
+  .backup-btn{
+    background:none; border:1px solid var(--steel); color:var(--chalk-dim);
+    font-family:var(--mono); font-size:10.5px; font-weight:600; letter-spacing:0.5px;
+    padding:8px 11px; border-radius:var(--radius); white-space:nowrap; transition:all .15s ease;
+  }
+  .backup-btn:hover{color:var(--brass); border-color:var(--brass);}
+
+  .wrap{max-width:1100px; margin:0 auto; padding:28px 20px 0;}
+
+  /* ===== Hero ===== */
+  .hero{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px;
+    flex-wrap:wrap; padding:18px 0 26px; border-bottom:1px solid var(--steel-soft); margin-bottom:26px;
+  }
+  .hero-num{font-family:var(--display); font-size:76px; font-weight:700; line-height:0.85; color:var(--brass); letter-spacing:-1px;}
+  .hero-title{font-family:var(--display); font-size:30px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-top:4px;}
+  .hero-sub{color:var(--chalk-dim); font-size:14px; margin-top:6px; max-width:520px; line-height:1.5;}
+  .stat-strip{display:flex; gap:22px; flex-wrap:wrap;}
+  .stat{text-align:right;}
+  .stat-label{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; color:var(--chalk-dim); text-transform:uppercase;}
+  .stat-value{font-family:var(--display); font-size:22px; font-weight:600; color:var(--chalk); margin-top:2px;}
+
+  /* ===== Section card ===== */
+  .card{background:var(--ink-2); border:1px solid var(--steel-soft); border-radius:var(--radius); margin-bottom:20px; overflow:hidden;}
+  .card-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 18px; border-bottom:1px solid var(--steel-soft); flex-wrap:wrap;
+  }
+  .card-head-left{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .card-tag{font-family:var(--mono); font-size:10px; letter-spacing:2px; padding:4px 8px; border-radius:var(--radius); text-transform:uppercase; font-weight:600;}
+  .tag-warmup{background:rgba(193,83,62,0.15); color:var(--ember);}
+  .tag-a{background:rgba(201,161,90,0.15); color:var(--brass);}
+  .tag-b{background:rgba(111,162,135,0.15); color:var(--sage);}
+  .tag-finisher{background:rgba(193,83,62,0.15); color:var(--ember);}
+  .tag-cooldown{background:rgba(111,162,135,0.15); color:var(--sage);}
+  .card-title{font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase;}
+  .card-meta{font-family:var(--mono); font-size:11px; color:var(--chalk-dim);}
+  .start-btn{
+    background:var(--brass); color:var(--ink); border:none; font-family:var(--mono); font-weight:700;
+    font-size:11px; letter-spacing:1.5px; padding:9px 16px; border-radius:var(--radius); text-transform:uppercase;
+    transition:background .15s ease;
+  }
+  .start-btn:hover{background:var(--brass-bright);}
+
+  /* ===== Exercise table ===== */
+  .ex-table{width:100%; border-collapse:collapse;}
+  .ex-table th{
+    font-family:var(--mono); font-size:10px; letter-spacing:1px; color:var(--chalk-dim); text-transform:uppercase;
+    text-align:left; padding:8px 10px; border-bottom:1px solid var(--steel-soft); font-weight:600;
+  }
+  .ex-table td{padding:12px 10px; border-bottom:1px solid var(--steel-soft); vertical-align:top; font-size:13.5px;}
+  .ex-table tr:last-child td{border-bottom:none;}
+  .ex-name{font-weight:600; color:var(--chalk);}
+  .ex-note{color:var(--chalk-dim); font-size:12px; margin-top:3px; line-height:1.4;}
+  .ex-reps{font-family:var(--mono); color:var(--brass); font-size:12.5px; white-space:nowrap;}
+  .day-cell{white-space:nowrap;}
+  .day-inputs{display:flex; gap:5px; align-items:center;}
+  .num-in{
+    width:46px; background:var(--ink-3); border:1px solid var(--steel); color:var(--chalk);
+    border-radius:var(--radius); padding:6px 6px; font-family:var(--mono); font-size:12px; text-align:center;
+  }
+  .num-in::placeholder{color:#5b626c;}
+  .num-in:focus{border-color:var(--brass);}
+  .chk{
+    width:22px; height:22px; border:1.5px solid var(--steel); border-radius:3px; background:var(--ink-3);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s ease;
+  }
+  .chk.done{background:var(--sage); border-color:var(--sage);}
+  .chk.done::after{content:'✓'; color:var(--ink); font-size:13px; font-weight:700;}
+  .day-label{font-family:var(--mono); font-size:9px; color:var(--chalk-dim); text-align:center; margin-bottom:4px; letter-spacing:0.5px;}
+
+  /* ===== Per-round log blocks (Circuit A/B, Finisher weeks 1-5) ===== */
+  .ex-block{border-bottom:1px solid var(--steel-soft); padding:16px 18px;}
+  .ex-block:last-child{border-bottom:none;}
+  .ex-block-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
+  .round-table{width:100%; border-collapse:collapse;}
+  .round-table th{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:1px; color:var(--chalk-dim); text-transform:uppercase;
+    text-align:center; padding:6px 4px; font-weight:600; border-bottom:1px solid var(--steel-soft);
+  }
+  .round-table th.rt-day-h{text-align:left;}
+  .round-table td{padding:7px 4px; text-align:center; vertical-align:middle;}
+  .round-table td.rt-day{
+    font-family:var(--mono); font-size:11px; color:var(--chalk-dim); text-align:left; white-space:nowrap; padding-right:10px;
+  }
+  .rt-inputs{display:flex; gap:4px; justify-content:center;}
+  .num-in-sm{width:42px; padding:5px 4px; font-size:11px;}
+  @media (max-width:820px){
+    .round-table{display:block; overflow-x:auto; white-space:nowrap;}
+  }
+
+  /* ===== Round checkboxes (Warm-up) ===== */
+  .round-chk-row{display:flex; gap:6px; justify-content:center;}
+  .round-chk-single{display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .round-chk-single span{font-family:var(--mono); font-size:8px; color:var(--chalk-dim); letter-spacing:0.5px;}
+
+  @media (max-width:820px){
+    .ex-table thead{display:none;}
+    .ex-table, .ex-table tbody, .ex-table tr, .ex-table td{display:block; width:100%;}
+    .ex-table tr{padding:14px 10px; border-bottom:1px solid var(--steel-soft);}
+    .ex-table td{border:none; padding:4px 0;}
+    .day-row{display:flex; gap:14px; margin-top:10px; flex-wrap:wrap;}
+    .day-block{flex:1; min-width:110px;}
+  }
+
+  /* ===== Session log ===== */
+  .log-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; padding:16px 18px;}
+  .log-day{background:var(--ink-3); border:1px solid var(--steel-soft); border-radius:var(--radius); padding:14px;}
+  .log-day-title{font-family:var(--display); font-size:13px; letter-spacing:1px; color:var(--brass); text-transform:uppercase; margin-bottom:10px;}
+  .log-field{margin-bottom:9px;}
+  .log-field label{display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:0.5px; color:var(--chalk-dim); text-transform:uppercase; margin-bottom:4px;}
+  .log-field input, .log-field textarea{
+    width:100%; background:var(--ink-2); border:1px solid var(--steel); color:var(--chalk);
+    border-radius:var(--radius); padding:7px 8px; font-size:12.5px;
+  }
+  .log-field textarea{resize:vertical; min-height:44px; font-family:var(--body);}
+  @media(max-width:820px){.log-grid{grid-template-columns:1fr;}}
+
+  /* ===== Overview ===== */
+  .lede{font-size:15px; color:var(--chalk-dim); line-height:1.7; max-width:680px; margin-bottom:26px;}
+  .lede strong{color:var(--chalk); font-weight:600;}
+  .eq-list{list-style:none; margin:10px 0 30px;}
+  .eq-list li{padding:8px 0; border-bottom:1px solid var(--steel-soft); font-size:13.5px; color:var(--chalk-dim); display:flex; gap:10px;}
+  .eq-list li::before{content:'—'; color:var(--brass);}
+  .plan-table{width:100%; border-collapse:collapse; margin-bottom:30px;}
+  .plan-table th{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--chalk-dim); text-align:left; padding:8px 10px; border-bottom:1px solid var(--steel-soft);}
+  .plan-table td{padding:12px 10px; border-bottom:1px solid var(--steel-soft); font-size:13px; vertical-align:top;}
+  .plan-week{font-family:var(--display); font-size:20px; color:var(--brass); font-weight:700;}
+  .section-label{font-family:var(--display); font-size:13px; letter-spacing:2px; color:var(--brass); text-transform:uppercase; margin:34px 0 14px; display:flex; align-items:center; gap:10px;}
+  .section-label::after{content:''; flex:1; height:1px; background:var(--steel-soft);}
+
+  /* ===== Progress page ===== */
+  .rack{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:8px;}
+  .rack-week-label{grid-column:1/-1; font-family:var(--mono); font-size:10px; color:var(--chalk-dim); letter-spacing:1px; margin-top:10px;}
+  .plate{
+    aspect-ratio:1.4; border-radius:var(--radius); border:1px solid var(--steel-soft); background:var(--ink-3);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; transition:all .2s ease;
+  }
+  .plate.filled{background:linear-gradient(160deg, var(--brass-bright), var(--brass-dim)); border-color:var(--brass);}
+  .plate-day{font-family:var(--mono); font-size:9px; color:var(--chalk-dim); letter-spacing:1px;}
+  .plate.filled .plate-day{color:rgba(18,21,26,0.65);}
+  .plate-check{font-family:var(--display); font-size:16px; font-weight:700; color:var(--steel);}
+  .plate.filled .plate-check{color:var(--ink);}
+
+  .chart-card{background:var(--ink-2); border:1px solid var(--steel-soft); border-radius:var(--radius); padding:20px; margin-bottom:22px;}
+  .chart-title{font-family:var(--display); font-size:14px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;}
+  .chart-sub{font-size:12px; color:var(--chalk-dim); margin-bottom:16px;}
+  .empty-note{font-size:12.5px; color:var(--chalk-dim); font-style:italic; padding:8px 0;}
+  .legend{display:flex; gap:16px; margin-top:10px; flex-wrap:wrap;}
+  .legend-item{display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--chalk-dim);}
+  .legend-dot{width:9px; height:9px; border-radius:50%;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;}
+  .stat-box{background:var(--ink-2); border:1px solid var(--steel-soft); border-radius:var(--radius); padding:16px; text-align:center;}
+  .stat-box-value{font-family:var(--display); font-size:32px; font-weight:700; color:var(--brass);}
+  .stat-box-label{font-family:var(--mono); font-size:10px; color:var(--chalk-dim); letter-spacing:1px; text-transform:uppercase; margin-top:4px;}
+  @media(max-width:820px){.stats-row{grid-template-columns:1fr;}}
+
+  /* ===== Timer overlay ===== */
+  .timer-overlay{
+    position:fixed; inset:0; background:rgba(10,12,15,0.97); z-index:100;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .timer-overlay.open{opacity:1; pointer-events:auto;}
+  .timer-close{position:absolute; top:22px; right:26px; background:none; border:1px solid var(--steel); color:var(--chalk-dim); width:38px; height:38px; border-radius:50%; font-size:16px;}
+  .timer-close:hover{color:var(--chalk); border-color:var(--brass);}
+  .timer-label{font-family:var(--mono); font-size:11px; letter-spacing:2px; color:var(--chalk-dim); text-transform:uppercase; margin-bottom:8px;}
+  .timer-phase{font-family:var(--mono); font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:18px;}
+  .phase-work{color:var(--sage);}
+  .phase-rest{color:var(--ember);}
+  .phase-roundrest{color:var(--brass);}
+  .dial-wrap{position:relative; width:280px; height:280px; margin-bottom:10px;}
+  .dial-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .dial-bg{fill:none; stroke:var(--ink-3); stroke-width:10;}
+  .dial-fg{fill:none; stroke:var(--brass); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke .3s ease;}
+  .dial-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .dial-time{font-family:var(--display); font-size:56px; font-weight:700; letter-spacing:1px;}
+  .dial-exname{font-family:var(--body); font-size:15px; font-weight:600; text-align:center; padding:0 20px; margin-top:4px;}
+  .timer-next{font-family:var(--mono); font-size:11px; color:var(--chalk-dim); margin-top:16px; letter-spacing:0.5px;}
+  .timer-round-dots{display:flex; gap:8px; margin-top:18px;}
+  .round-dot{width:8px; height:8px; border-radius:50%; background:var(--steel);}
+  .round-dot.active{background:var(--brass);}
+  .round-dot.past{background:var(--brass-dim);}
+  .timer-controls{display:flex; gap:12px; margin-top:26px;}
+  .timer-btn{
+    background:var(--ink-2); border:1px solid var(--steel); color:var(--chalk); font-family:var(--mono);
+    font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:11px 20px; border-radius:var(--radius);
+  }
+  .timer-btn:hover{border-color:var(--brass); color:var(--brass);}
+  .timer-btn.primary{background:var(--brass); color:var(--ink); border-color:var(--brass); font-weight:700;}
+  .timer-btn.primary:hover{background:var(--brass-bright);}
+  .amrap-counter{display:flex; align-items:center; gap:16px; margin-top:20px;}
+  .amrap-btn{background:var(--ink-2); border:1px solid var(--steel); color:var(--chalk); width:44px; height:44px; border-radius:50%; font-size:20px;}
+  .amrap-btn:hover{border-color:var(--brass); color:var(--brass);}
+  .amrap-num{font-family:var(--display); font-size:34px; font-weight:700; min-width:50px; text-align:center;}
+
+  /* ===== Day picker & per-exercise log popup ===== */
+  .log-popup-overlay{
+    position:fixed; inset:0; background:rgba(10,12,15,0.97); z-index:120;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .2s ease; padding:20px;
+  }
+  .log-popup-overlay.open{opacity:1; pointer-events:auto;}
+  .log-popup{
+    background:var(--ink-2); border:1px solid var(--brass); border-radius:var(--radius);
+    padding:30px 30px 26px; width:320px; max-width:100%; text-align:center;
+  }
+  .log-popup-label{font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; margin-bottom:4px;}
+  .log-popup-day{font-family:var(--mono); font-size:11px; color:var(--brass); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:20px;}
+  .log-popup-fields{display:flex; gap:12px; margin-bottom:22px;}
+  .log-popup-fields > div{flex:1; text-align:left;}
+  .log-popup-fields label{display:block; font-family:var(--mono); font-size:9.5px; color:var(--chalk-dim); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;}
+  .log-popup-fields input{
+    width:100%; background:var(--ink-3); border:1px solid var(--steel); color:var(--chalk);
+    border-radius:var(--radius); padding:11px 8px; font-family:var(--mono); font-size:16px; text-align:center;
+  }
+  .log-popup-fields input:focus{border-color:var(--brass);}
+  .log-popup-actions{display:flex; gap:10px; justify-content:center;}
+  .day-picker-btns{display:flex; gap:10px; justify-content:center; margin-bottom:16px;}
+
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); z-index:200;
+    background:var(--ink-3); border:1px solid var(--brass); color:var(--chalk); font-family:var(--mono);
+    font-size:12px; padding:10px 18px; border-radius:var(--radius); opacity:0; transition:all .25s ease; pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .footer-note{text-align:center; color:var(--chalk-dim); font-size:11.5px; font-family:var(--mono); letter-spacing:0.5px; padding:40px 20px 10px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="wordmark">IRON<span>·</span>LEDGER</div>
+    <div class="nav" id="nav"></div>
+    <div class="backup-actions">
+      <button id="exportBtn" class="backup-btn" title="Download a backup file of everything you've logged">⬇ Export</button>
+      <button id="importBtn" class="backup-btn" title="Restore your logged data from a backup file">⬆ Import</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<div class="timer-overlay" id="timerOverlay">
+  <button class="timer-close" id="timerClose">✕</button>
+  <div class="timer-label" id="timerLabel">CIRCUIT A</div>
+  <div class="timer-phase phase-work" id="timerPhase">WORK</div>
+  <div class="dial-wrap">
+    <svg viewBox="0 0 200 200">
+      <circle class="dial-bg" cx="100" cy="100" r="88"></circle>
+      <circle class="dial-fg" id="dialFg" cx="100" cy="100" r="88"></circle>
+    </svg>
+    <div class="dial-center">
+      <div class="dial-time" id="dialTime">00:45</div>
+      <div class="dial-exname" id="dialExName">Goblet Squat</div>
+    </div>
+  </div>
+  <div class="timer-round-dots" id="roundDots"></div>
+  <div class="timer-next" id="timerNext">NEXT — Dumbbell Bench Press</div>
+  <div class="timer-controls" id="timerControls">
+    <button class="timer-btn" id="timerSkip">SKIP ▸</button>
+    <button class="timer-btn primary" id="timerPause">PAUSE</button>
+    <button class="timer-btn" id="timerReset">RESET</button>
+  </div>
+  <div class="amrap-counter" id="amrapCounter" style="display:none;">
+    <button class="amrap-btn" id="amrapMinus">−</button>
+    <div class="amrap-num" id="amrapNum">0</div>
+    <button class="amrap-btn" id="amrapPlus">+</button>
+  </div>
+</div>
+
+<div class="log-popup-overlay" id="dayPickerOverlay">
+  <div class="log-popup">
+    <div class="log-popup-label">Log this session as</div>
+    <div class="log-popup-day">Which day is this?</div>
+    <div class="day-picker-btns">
+      <button class="timer-btn day-pick-btn" data-day="1">Day 1</button>
+      <button class="timer-btn day-pick-btn" data-day="2">Day 2</button>
+      <button class="timer-btn day-pick-btn" data-day="3">Day 3</button>
+    </div>
+    <button class="timer-btn" id="dayPickerCancel">Cancel</button>
+  </div>
+</div>
+
+<div class="log-popup-overlay" id="logPopupOverlay">
+  <div class="log-popup">
+    <div class="log-popup-label" id="logPopupLabel">Exercise — Round 1</div>
+    <div class="log-popup-day" id="logPopupDay">Day 1</div>
+    <div class="log-popup-fields">
+      <div><label>Weight (kg)</label><input id="logPopupWeight" type="number" min="0" step="0.5" inputmode="decimal" autocomplete="off"></div>
+      <div><label>Reps</label><input id="logPopupReps" type="number" min="0" step="1" inputmode="numeric" autocomplete="off"></div>
+    </div>
+    <div class="log-popup-actions">
+      <button class="timer-btn" id="logPopupSkip">Skip</button>
+      <button class="timer-btn primary" id="logPopupSave">Save &amp; Continue ▸</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+/* ===================== DATA (mirrors the 6-week programme) ===================== */
+const WARMUP = [
+  { name: "Bodyweight Squats", reps: "10 reps", note: "Full depth, knees tracking over toes.", seconds: 30 },
+  { name: "Incline Press-ups on Bench", reps: "10 reps", note: "Hands on bench edge; chest to bench.", seconds: 30 },
+  { name: "Hip Hinges", reps: "10 reps", note: "Push hips back, flat back, feel hamstrings.", seconds: 30 },
+  { name: "Alternating Reverse Lunges", reps: "10 reps", note: "5 each leg; controlled descent.", seconds: 30 },
+  { name: "March on the Spot, High Knees", reps: "20 sec", note: "Raise core temperature, quick light steps.", seconds: 20 },
+  { name: "Light DB Shoulder Press", reps: "10 reps", note: "Prime the shoulders, not for fatigue.", seconds: 30 },
+];
+
+const COOLDOWN = [
+  { name: "Hamstrings", hold: "30 sec each side" },
+  { name: "Quads", hold: "30 sec each side" },
+  { name: "Glutes", hold: "30 sec each side" },
+  { name: "Chest", hold: "30 sec" },
+  { name: "Shoulders", hold: "30 sec each side" },
+  { name: "Hip Flexors", hold: "30 sec each side" },
+];
+
+function mk(name, reps, note, seconds) { return { name, reps, note, seconds }; }
+
+const WEEKS = {
+  1: {
+    title: "Foundation", sub: "Learn the movements", rounds: 2, work: 45, rest: 20, roundRest: 90,
+    load: "4-6 kg", finRounds: 2,
+    tempo: "Normal, controlled tempo throughout — focus on full range of motion. Only 2 rounds this week while you learn each exercise; volume ramps up from Week 2.",
+    circuitA: [
+      mk("Goblet Squat", "10-12 reps", "Elbows inside knees at bottom; drive through heels.", 45),
+      mk("Dumbbell Bench Press", "10-12 reps", "Full stretch at bottom, don't lock elbows hard at top.", 45),
+      mk("One-Arm Dumbbell Row", "10 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 45),
+      mk("March on the Spot Holding DBs", "45 sec", "Keep torso tall, drive knees up.", 45),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "12 reps", "Soft knees, hinge at hips, DBs close to legs.", 45),
+      mk("Seated Dumbbell Shoulder Press", "10 reps", "Sit tall on bench, avoid excessive lower-back arch.", 45),
+      mk("Bench Step-Ups", "10 each leg", "Drive through the lead heel; step down with control.", 45),
+      mk("Mountain Climbers (slow, controlled)", "30 sec", "Keep hips level, controlled knee drive — not a sprint.", 30),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "12 reps", "Elbows pinned to sides, no swinging.", 45),
+      mk("Overhead Dumbbell Triceps Extension", "12 reps", "Use both hands on one DB or one per hand; elbows in.", 45),
+      mk("Farmer's Carry", "40 sec", "Stand tall, shoulders back, walk or march on spot.", 40),
+      mk("Plank", "30 sec", "Straight line head-to-heels, brace the core.", 30),
+    ],
+  },
+  2: {
+    title: "Consistency", sub: "Add reps / slight load", rounds: 3, work: 45, rest: 20, roundRest: 75,
+    load: "5-7 kg", finRounds: 3,
+    tempo: "Normal tempo. Take the heaviest dumbbell you can control for the full rep range.",
+    circuitA: [
+      mk("Goblet Squat", "11-13 reps", "Elbows inside knees at bottom; drive through heels.", 45),
+      mk("Dumbbell Bench Press", "11-13 reps", "Full stretch at bottom, don't lock elbows hard at top.", 45),
+      mk("One-Arm Dumbbell Row", "10-11 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 45),
+      mk("March on the Spot Holding DBs", "45 sec", "Keep torso tall, drive knees up.", 45),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "12 reps", "Soft knees, hinge at hips, DBs close to legs.", 45),
+      mk("Seated Dumbbell Shoulder Press", "10-11 reps", "Sit tall on bench, avoid excessive lower-back arch.", 45),
+      mk("Bench Step-Ups", "10-11 each leg", "Drive through the lead heel; step down with control.", 45),
+      mk("Mountain Climbers (slow, controlled)", "35 sec", "Keep hips level, controlled knee drive — not a sprint.", 35),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "12 reps", "Elbows pinned to sides, no swinging.", 45),
+      mk("Overhead Dumbbell Triceps Extension", "12 reps", "Use both hands on one DB or one per hand; elbows in.", 45),
+      mk("Farmer's Carry", "45 sec", "Stand tall, shoulders back, walk or march on spot.", 45),
+      mk("Plank", "35 sec", "Straight line head-to-heels, brace the core.", 35),
+    ],
+  },
+  3: {
+    title: "Volume", sub: "Add a 4th round", rounds: 4, work: 45, rest: 15, roundRest: 75,
+    load: "6-8 kg", finRounds: 3,
+    tempo: "Normal tempo, but a 4th round is added — keep form strict as fatigue builds.",
+    circuitA: [
+      mk("Goblet Squat", "12-14 reps", "Elbows inside knees at bottom; drive through heels.", 45),
+      mk("Dumbbell Bench Press", "12 reps", "Full stretch at bottom, don't lock elbows hard at top.", 45),
+      mk("One-Arm Dumbbell Row", "11-12 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 45),
+      mk("March on the Spot Holding DBs", "45 sec", "Keep torso tall, drive knees up.", 45),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "12-14 reps", "Soft knees, hinge at hips, DBs close to legs.", 45),
+      mk("Seated Dumbbell Shoulder Press", "11 reps", "Sit tall on bench, avoid excessive lower-back arch.", 45),
+      mk("Bench Step-Ups", "11-12 each leg", "Drive through the lead heel; step down with control.", 45),
+      mk("Mountain Climbers (slow, controlled)", "35 sec", "Keep hips level, controlled knee drive — not a sprint.", 35),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "13 reps", "Elbows pinned to sides, no swinging.", 45),
+      mk("Overhead Dumbbell Triceps Extension", "13 reps", "Use both hands on one DB or one per hand; elbows in.", 45),
+      mk("Farmer's Carry", "45 sec", "Stand tall, shoulders back, walk or march on spot.", 45),
+      mk("Plank", "40 sec", "Straight line head-to-heels, brace the core.", 40),
+    ],
+  },
+  4: {
+    title: "Density", sub: "Work harder in less time", rounds: 4, work: 50, rest: 15, roundRest: 60,
+    load: "7-9 kg", finRounds: 4,
+    tempo: "Normal tempo. Rest between rounds drops to 60s — expect it to feel noticeably harder.",
+    circuitA: [
+      mk("Goblet Squat", "12 reps", "Elbows inside knees at bottom; drive through heels.", 50),
+      mk("Dumbbell Bench Press", "12 reps", "Full stretch at bottom, don't lock elbows hard at top.", 50),
+      mk("One-Arm Dumbbell Row", "12 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 50),
+      mk("March on the Spot Holding DBs", "50 sec", "Keep torso tall, drive knees up.", 50),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "12-14 reps", "Soft knees, hinge at hips, DBs close to legs.", 50),
+      mk("Seated Dumbbell Shoulder Press", "12 reps", "Sit tall on bench, avoid excessive lower-back arch.", 50),
+      mk("Bench Step-Ups", "12 each leg", "Drive through the lead heel; step down with control.", 50),
+      mk("Mountain Climbers (slow, controlled)", "40 sec", "Keep hips level, controlled knee drive — not a sprint.", 40),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "13 reps", "Elbows pinned to sides, no swinging.", 50),
+      mk("Overhead Dumbbell Triceps Extension", "13 reps", "Use both hands on one DB or one per hand; elbows in.", 50),
+      mk("Farmer's Carry", "50 sec", "Stand tall, shoulders back, walk or march on spot.", 50),
+      mk("Plank", "40 sec", "Straight line head-to-heels, brace the core.", 40),
+    ],
+  },
+  5: {
+    title: "Tension", sub: "Tempo & load", rounds: 4, work: 50, rest: 15, roundRest: 60,
+    load: "8-10 kg", finRounds: 4,
+    tempo: "3-1-1 tempo on Goblet Squat & DB Bench Press (3s lower, 1s pause, 1s lift). All other exercises normal tempo.",
+    circuitA: [
+      mk("Goblet Squat (3-1-1 tempo)", "10-12 reps", "Elbows inside knees at bottom; drive through heels.", 50),
+      mk("Dumbbell Bench Press (3-1-1 tempo)", "10-12 reps", "Full stretch at bottom, don't lock elbows hard at top.", 50),
+      mk("One-Arm Dumbbell Row", "10-12 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 50),
+      mk("March on the Spot Holding DBs", "50 sec", "Keep torso tall, drive knees up.", 50),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "12 reps", "Soft knees, hinge at hips, DBs close to legs.", 50),
+      mk("Seated Dumbbell Shoulder Press", "10-12 reps", "Sit tall on bench, avoid excessive lower-back arch.", 50),
+      mk("Bench Step-Ups", "10-12 each leg", "Drive through the lead heel; step down with control.", 50),
+      mk("Mountain Climbers (slow, controlled)", "40 sec", "Keep hips level, controlled knee drive — not a sprint.", 40),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "14 reps", "Elbows pinned to sides, no swinging.", 50),
+      mk("Overhead Dumbbell Triceps Extension", "14 reps", "Use both hands on one DB or one per hand; elbows in.", 50),
+      mk("Farmer's Carry", "55 sec", "Stand tall, shoulders back, walk or march on spot.", 55),
+      mk("Plank", "45 sec", "Straight line head-to-heels, brace the core.", 45),
+    ],
+  },
+  6: {
+    title: "Peak", sub: "Test week", rounds: 4, work: 50, rest: 10, roundRest: 55,
+    load: "9-10 kg", finRounds: null,
+    tempo: "Peak week — push every set close to your rep/load limit with good form. Finisher is a continuous AMRAP.",
+    circuitA: [
+      mk("Goblet Squat", "12-15 reps", "Elbows inside knees at bottom; drive through heels.", 50),
+      mk("Dumbbell Bench Press", "12-15 reps", "Full stretch at bottom, don't lock elbows hard at top.", 50),
+      mk("One-Arm Dumbbell Row", "12-15 each arm", "Flat back, pull elbow past torso, squeeze shoulder blade.", 50),
+      mk("March on the Spot Holding DBs", "50 sec", "Keep torso tall, drive knees up.", 50),
+    ],
+    circuitB: [
+      mk("Dumbbell Romanian Deadlift", "14-15 reps", "Soft knees, hinge at hips, DBs close to legs.", 50),
+      mk("Seated Dumbbell Shoulder Press", "12-15 reps", "Sit tall on bench, avoid excessive lower-back arch.", 50),
+      mk("Bench Step-Ups", "12-15 each leg", "Drive through the lead heel; step down with control.", 50),
+      mk("Mountain Climbers (slow, controlled)", "45 sec", "Keep hips level, controlled knee drive — not a sprint.", 45),
+    ],
+    finisher: [
+      mk("Dumbbell Curl", "15 reps", "Elbows pinned to sides, no swinging.", 50),
+      mk("Overhead Dumbbell Triceps Extension", "15 reps", "Use both hands on one DB or one per hand; elbows in.", 50),
+      mk("Farmer's Carry", "60 sec", "Stand tall, shoulders back, walk or march on spot.", 60),
+      mk("Plank", "50 sec", "Straight line head-to-heels, brace the core.", 50),
+    ],
+  },
+};
+
+// ===================== HELPERS =====================
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+/* ===================== OFFLINE STORAGE (localStorage-backed) =====================
+   This file works entirely offline. Everything you log is saved directly in this
+   browser's local storage — no account, no server, no internet connection needed.
+   The API shape mirrors Claude's storage tool so the rest of the app is unchanged. */
+const LS_PREFIX = 'ironledger:';
+
+window.storage = {
+  async get(key) {
+    try {
+      const raw = localStorage.getItem(LS_PREFIX + key);
+      if (raw === null) return null;
+      return { key, value: raw, shared: false };
+    } catch (e) { return null; }
+  },
+  async set(key, value) {
+    localStorage.setItem(LS_PREFIX + key, value);
+    return { key, value, shared: false };
+  },
+  async delete(key) {
+    const existed = localStorage.getItem(LS_PREFIX + key) !== null;
+    localStorage.removeItem(LS_PREFIX + key);
+    return { key, deleted: existed, shared: false };
+  },
+  async list(prefix) {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf(LS_PREFIX) === 0) {
+        const stripped = k.slice(LS_PREFIX.length);
+        if (!prefix || stripped.indexOf(prefix) === 0) keys.push(stripped);
+      }
+    }
+    return { keys, prefix, shared: false };
+  },
+};
+
+/* ---- Backup / restore to a .json file (in case you clear browser data or switch devices) ---- */
+function exportBackup() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(LS_PREFIX) === 0) data[k.slice(LS_PREFIX.length)] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `iron-ledger-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+
+function importBackupFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      Object.keys(data).forEach(k => localStorage.setItem(LS_PREFIX + k, data[k]));
+      showToast('Backup restored');
+      setView(currentView); // refresh whatever's on screen with the restored data
+    } catch (e) {
+      showToast('Could not read that file');
+    }
+  };
+  reader.onerror = () => showToast('Could not read that file');
+  reader.readAsText(file);
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportBackup);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (file) importBackupFile(file);
+  e.target.value = '';
+});
+
+/* ===================== STORAGE HELPERS ===================== */
+async function loadVal(key) {
+  try {
+    const r = await window.storage.get(key, false);
+    if (!r) return null;
+    try { return JSON.parse(r.value); } catch (e) { return r.value; }
+  } catch (e) { return null; }
+}
+async function saveVal(key, value) {
+  try { await window.storage.set(key, JSON.stringify(value), false); showToast('Saved'); }
+  catch (e) { showToast('Could not save'); }
+}
+async function listKeys(prefix) {
+  try {
+    const r = await window.storage.list(prefix, false);
+    return (r && r.keys) ? r.keys : [];
+  } catch (e) { return []; }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+function debounce(fn, ms) {
+  let h;
+  return (...args) => { clearTimeout(h); h = setTimeout(() => fn(...args), ms); };
+}
+
+/* ===================== APP STATE ===================== */
+let currentView = 'overview';
+const app = document.getElementById('app');
+const navEl = document.getElementById('nav');
+
+const NAV_ITEMS = [
+  { id: 'overview', label: 'OVERVIEW' },
+  { id: 'week-1', label: 'W1' },
+  { id: 'week-2', label: 'W2' },
+  { id: 'week-3', label: 'W3' },
+  { id: 'week-4', label: 'W4' },
+  { id: 'week-5', label: 'W5' },
+  { id: 'week-6', label: 'W6' },
+  { id: 'progress', label: 'PROGRESS' },
+];
+
+function renderNav() {
+  navEl.innerHTML = '';
+  NAV_ITEMS.forEach(item => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn' + (currentView === item.id ? ' active' : '');
+    b.textContent = item.label;
+    b.addEventListener('click', () => setView(item.id));
+    navEl.appendChild(b);
+  });
+}
+
+function setView(view) {
+  currentView = view;
+  renderNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (view === 'overview') renderOverview();
+  else if (view === 'progress') renderProgress();
+  else if (view.startsWith('week-')) renderWeek(parseInt(view.split('-')[1], 10));
+}
+
+/* ===================== OVERVIEW ===================== */
+function renderOverview() {
+  const planRows = Object.keys(WEEKS).map(k => {
+    const w = WEEKS[k];
+    return `<tr>
+      <td><span class="plan-week">0${k}</span></td>
+      <td><strong>${w.title}</strong><br><span style="color:var(--chalk-dim)">${w.sub}</span></td>
+      <td>${w.rounds} rounds</td>
+      <td>${w.work}s / ${w.rest}s</td>
+      <td>${w.roundRest}s</td>
+      <td>${w.load}</td>
+    </tr>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="hero">
+      <div>
+        <div class="hero-title">6-Week Programme</div>
+        <div class="hero-sub">Full body fat-loss &amp; muscle building — home dumbbell training with progressive overload.</div>
+      </div>
+    </div>
+
+    <p class="lede">
+      This is your original full-body session, progressed over six weeks. Each week the <strong>volume</strong>
+      (more rounds), <strong>density</strong> (less rest) or <strong>load</strong> increases slightly, so your
+      body keeps adapting instead of plateauing. Train the same session <strong>3 non-consecutive days a week</strong>
+      — e.g. Mon / Wed / Fri — with at least one rest or light-activity day between sessions.
+    </p>
+
+    <div class="section-label">Equipment</div>
+    <ul class="eq-list">
+      <li>Flat / adjustable bench</li>
+      <li>One pair of dumbbells, adjustable up to 10 kg each</li>
+      <li>Exercise mat (optional, for finisher / cool-down comfort)</li>
+    </ul>
+
+    <div class="section-label">Progression at a glance</div>
+    <table class="plan-table">
+      <thead><tr><th>Wk</th><th>Focus</th><th>Rounds</th><th>Work / Rest</th><th>Round rest</th><th>Load guide</th></tr></thead>
+      <tbody>${planRows}</tbody>
+    </table>
+
+    <div class="section-label">How to use this</div>
+    <p class="lede">
+      Open a week tab and hit <strong>Start Circuit</strong> on Circuit A, B, or the Finisher — a full-screen
+      interval timer runs the rounds for you, and prompts you for weight and reps after every exercise.
+      Check the <strong>Progress</strong> tab any time to see completed sessions and your load progression
+      on the two main lifts.
+    </p>
+
+    <div class="section-label">Offline &amp; your data</div>
+    <p class="lede">
+      This file works with no internet connection. Everything you log is saved directly in this browser
+      using local storage — nothing is sent anywhere. That also means your data lives in <strong>this browser,
+      on this device</strong>, and clearing your browser data will erase it. Use the <strong>Export</strong>
+      button (top right) after a session or two to download a backup file, and <strong>Import</strong> to
+      restore it here or on another device.
+    </p>
+  `;
+}
+
+/* ===================== WEEK PAGE ===================== */
+
+// Warm-up (round checkboxes) / Cool-down (single checkbox) / Week-6 finisher (single weight+reps, no fixed rounds)
+function exRow(section, idx, ex, weekNum, mode, roundsCount) {
+  const cells = [1, 2, 3].map(day => {
+    if (mode === 'check-rounds') {
+      const boxes = Array.from({ length: roundsCount }, (_, i) => i + 1).map(r => `
+        <div class="round-chk-single">
+          <span>R${r}</span>
+          <div class="chk" data-section="${section}" data-idx="${idx}" data-day="${day}" data-round="${r}" data-week="${weekNum}"></div>
+        </div>`).join('');
+      return `<td class="day-cell"><div class="day-label">D${day}</div><div class="round-chk-row">${boxes}</div></td>`;
+    }
+    if (mode === 'check-single') {
+      return `<td class="day-cell">
+        <div class="day-label">D${day}</div>
+        <div class="chk" data-section="${section}" data-idx="${idx}" data-day="${day}" data-week="${weekNum}"></div>
+      </td>`;
+    }
+    // weight-single (week 6 AMRAP finisher — no fixed round count)
+    return `<td class="day-cell">
+      <div class="day-label">D${day}</div>
+      <div class="day-inputs">
+        <input class="num-in" type="number" min="0" step="0.5" placeholder="kg"
+          data-kind="weight" data-section="${section}" data-idx="${idx}" data-day="${day}" data-week="${weekNum}">
+        <input class="num-in" type="number" min="0" step="1" placeholder="reps"
+          data-kind="reps" data-section="${section}" data-idx="${idx}" data-day="${day}" data-week="${weekNum}">
+      </div>
+    </td>`;
+  }).join('');
+
+  return `<tr>
+    <td>
+      <div class="ex-name">${ex.name}</div>
+      <div class="ex-note">${ex.note || ''}</div>
+    </td>
+    <td class="ex-reps">${ex.reps || ex.hold || ''}</td>
+    ${cells}
+  </tr>`;
+}
+
+// Circuit A / Circuit B / Finisher (weeks 1-5): one weight+reps entry per round, per day.
+function roundBlock(section, idx, ex, weekNum, roundsCount) {
+  const headerCells = Array.from({ length: roundsCount }, (_, i) => i + 1).map(r => `<th>Round ${r}</th>`).join('');
+  const dayRows = [1, 2, 3].map(day => {
+    const roundCells = Array.from({ length: roundsCount }, (_, i) => i + 1).map(r => `
+      <td>
+        <div class="rt-inputs">
+          <input class="num-in num-in-sm" type="number" min="0" step="0.5" placeholder="kg"
+            data-kind="weight" data-section="${section}" data-idx="${idx}" data-day="${day}" data-round="${r}" data-week="${weekNum}">
+          <input class="num-in num-in-sm" type="number" min="0" step="1" placeholder="reps"
+            data-kind="reps" data-section="${section}" data-idx="${idx}" data-day="${day}" data-round="${r}" data-week="${weekNum}">
+        </div>
+      </td>`).join('');
+    return `<tr><td class="rt-day">Day ${day}</td>${roundCells}</tr>`;
+  }).join('');
+
+  return `
+  <div class="ex-block">
+    <div class="ex-block-head">
+      <div>
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-note">${ex.note || ''}</div>
+      </div>
+      <div class="ex-reps">${ex.reps || ''}</div>
+    </div>
+    <table class="round-table">
+      <thead><tr><th class="rt-day-h">Round Log</th>${headerCells}</tr></thead>
+      <tbody>${dayRows}</tbody>
+    </table>
+  </div>`;
+}
+
+function sectionCard({ tag, tagClass, title, meta, rows, blocksHtml, showStart, section, weekNum }) {
+  const startBtn = showStart ? `<button class="start-btn" data-start-section="${section}" data-week="${weekNum}">Start Circuit ▸</button>` : '';
+  const body = blocksHtml !== undefined
+    ? blocksHtml
+    : `<table class="ex-table">
+        <thead><tr><th style="width:32%">Exercise</th><th>Target</th><th>Day 1</th><th>Day 2</th><th>Day 3</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <span class="card-tag ${tagClass}">${tag}</span>
+        <span class="card-title">${title}</span>
+        <span class="card-meta">${meta}</span>
+      </div>
+      ${startBtn}
+    </div>
+    ${body}
+  </div>`;
+}
+
+function renderWeek(weekNum) {
+  const w = WEEKS[weekNum];
+
+  const warmupRows = WARMUP.map((ex, i) => exRow('warmup', i, ex, weekNum, 'check-rounds', 2)).join('');
+  const circuitABlocks = w.circuitA.map((ex, i) => roundBlock('circuitA', i, ex, weekNum, w.rounds)).join('');
+  const circuitBBlocks = w.circuitB.map((ex, i) => roundBlock('circuitB', i, ex, weekNum, w.rounds)).join('');
+  const finisherBlocks = weekNum < 6
+    ? w.finisher.map((ex, i) => roundBlock('finisher', i, ex, weekNum, w.finRounds)).join('')
+    : null;
+  const finisherRows = weekNum === 6
+    ? w.finisher.map((ex, i) => exRow('finisher', i, ex, weekNum, 'weight-single')).join('')
+    : null;
+  const cooldownRows = COOLDOWN.map((ex, i) => `<tr>
+    <td><div class="ex-name">${ex.name}</div></td>
+    <td class="ex-reps">${ex.hold}</td>
+    ${[1,2,3].map(day => `<td class="day-cell"><div class="day-label">D${day}</div>
+      <div class="chk" data-section="cooldown" data-idx="${i}" data-day="${day}" data-week="${weekNum}"></div></td>`).join('')}
+  </tr>`).join('');
+
+  const finisherLabel = weekNum < 6 ? `${w.finRounds} rounds` : 'AMRAP · 9 min';
+
+  app.innerHTML = `
+    <div class="hero">
+      <div>
+        <div class="hero-num">0${weekNum}</div>
+        <div class="hero-title">${w.title}</div>
+        <div class="hero-sub">${w.tempo}</div>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="stat-label">Rounds</div><div class="stat-value">${w.rounds}</div></div>
+        <div class="stat"><div class="stat-label">Work / Rest</div><div class="stat-value">${w.work}s/${w.rest}s</div></div>
+        <div class="stat"><div class="stat-label">Round Rest</div><div class="stat-value">${w.roundRest}s</div></div>
+        <div class="stat"><div class="stat-label">Load Guide</div><div class="stat-value">${w.load}</div></div>
+      </div>
+    </div>
+
+    ${sectionCard({ tag: 'Warm-up', tagClass: 'tag-warmup', title: 'Warm-up', meta: '8 min · 2 rounds, no rest', rows: warmupRows })}
+
+    ${sectionCard({ tag: 'Circuit A', tagClass: 'tag-a', title: 'Circuit A', meta: `${w.rounds} rounds · ${w.work}s work / ${w.rest}s rest · ${w.roundRest}s after each round · log every round below`, blocksHtml: circuitABlocks, showStart: true, section: 'circuitA', weekNum })}
+
+    ${sectionCard({ tag: 'Circuit B', tagClass: 'tag-b', title: 'Circuit B', meta: `${w.rounds} rounds · ${w.roundRest}s after each round · log every round below`, blocksHtml: circuitBBlocks, showStart: true, section: 'circuitB', weekNum })}
+
+    ${weekNum < 6
+      ? sectionCard({ tag: 'Finisher', tagClass: 'tag-finisher', title: 'Finisher', meta: `8-10 min · ${finisherLabel} · log every round below`, blocksHtml: finisherBlocks, showStart: true, section: 'finisher', weekNum })
+      : sectionCard({ tag: 'Finisher', tagClass: 'tag-finisher', title: 'Finisher', meta: `8-10 min · ${finisherLabel} · continuous, so log one best set per day`, rows: finisherRows, showStart: true, section: 'finisher', weekNum })
+    }
+
+    ${sectionCard({ tag: 'Cool-down', tagClass: 'tag-cooldown', title: 'Cool-down', meta: '5 min · static stretches', rows: cooldownRows })}
+
+    <div class="card">
+      <div class="card-head"><div class="card-head-left"><span class="card-title">Session Log</span><span class="card-meta">fill in after each workout day</span></div></div>
+      <div class="log-grid" id="logGrid-${weekNum}">
+        ${[1,2,3].map(day => `
+        <div class="log-day">
+          <div class="log-day-title">Day ${day}</div>
+          <div class="log-field"><label>Date</label><input type="date" data-log="date" data-day="${day}" data-week="${weekNum}"></div>
+          <div class="log-field"><label>Duration (min)</label><input type="number" min="0" data-log="duration" data-day="${day}" data-week="${weekNum}"></div>
+          <div class="log-field"><label>Bodyweight (kg)</label><input type="number" min="0" step="0.1" data-log="bodyweight" data-day="${day}" data-week="${weekNum}"></div>
+          <div class="log-field"><label>RPE (1-10)</label><input type="number" min="1" max="10" data-log="rpe" data-day="${day}" data-week="${weekNum}"></div>
+          <div class="log-field"><label>Notes</label><textarea data-log="notes" data-day="${day}" data-week="${weekNum}" placeholder="How it felt, what to change next time..."></textarea></div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  wireWeekInputs(weekNum);
+  hydrateWeek(weekNum);
+}
+
+function keyFor(prefix, weekNum, day, section, idx, round) {
+  const base = `${prefix}:w${weekNum}:d${day}:${section}:${idx}`;
+  return (round !== undefined && round !== null && round !== '') ? `${base}:r${round}` : base;
+}
+
+function wireWeekInputs(weekNum) {
+  // numeric weight/reps inputs (round-based or single, depending on data-round presence)
+  app.querySelectorAll('input.num-in').forEach(inp => {
+    inp.addEventListener('input', debounce(async () => {
+      const { section, idx, day, round } = inp.dataset;
+      const key = keyFor('ex', weekNum, day, section, idx, round);
+      const sel = round
+        ? `[data-section="${section}"][data-idx="${idx}"][data-day="${day}"][data-round="${round}"]`
+        : `[data-section="${section}"][data-idx="${idx}"][data-day="${day}"]:not([data-round])`;
+      const weightEl = app.querySelector(`input[data-kind="weight"]${sel}`);
+      const repsEl = app.querySelector(`input[data-kind="reps"]${sel}`);
+      await saveVal(key, { weight: weightEl.value, reps: repsEl.value });
+    }, 500));
+  });
+
+  // checkboxes (warmup rounds / cooldown single)
+  app.querySelectorAll('.chk').forEach(chk => {
+    chk.addEventListener('click', async () => {
+      const { section, idx, day, round } = chk.dataset;
+      const key = keyFor('chk', weekNum, day, section, idx, round);
+      const nowDone = !chk.classList.contains('done');
+      chk.classList.toggle('done', nowDone);
+      await saveVal(key, nowDone);
+    });
+  });
+
+  // session log fields
+  app.querySelectorAll('[data-log]').forEach(field => {
+    const evt = field.tagName === 'TEXTAREA' ? 'input' : 'change';
+    field.addEventListener(evt, debounce(async () => {
+      const { day } = field.dataset;
+      const key = `log:w${weekNum}:d${day}`;
+      const existing = (await loadVal(key)) || {};
+      existing[field.dataset.log] = field.value;
+      await saveVal(key, existing);
+    }, 500));
+  });
+
+  // start circuit buttons
+  app.querySelectorAll('[data-start-section]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      startCircuitTimer(weekNum, btn.dataset.startSection);
+    });
+  });
+}
+
+async function hydrateWeek(weekNum) {
+  // numeric inputs
+  const numInputs = app.querySelectorAll('input.num-in');
+  for (const inp of numInputs) {
+    const { section, idx, day, kind, round } = inp.dataset;
+    const key = keyFor('ex', weekNum, day, section, idx, round);
+    const val = await loadVal(key);
+    if (val && val[kind]) inp.value = val[kind];
+  }
+  // checkboxes
+  const chks = app.querySelectorAll('.chk');
+  for (const chk of chks) {
+    const { section, idx, day, round } = chk.dataset;
+    const key = keyFor('chk', weekNum, day, section, idx, round);
+    const val = await loadVal(key);
+    if (val) chk.classList.add('done');
+  }
+  // log fields
+  for (const day of [1, 2, 3]) {
+    const key = `log:w${weekNum}:d${day}`;
+    const val = await loadVal(key);
+    if (!val) continue;
+    Object.keys(val).forEach(field => {
+      const el = app.querySelector(`[data-log="${field}"][data-day="${day}"][data-week="${weekNum}"]`);
+      if (el) el.value = val[field];
+    });
+  }
+}
+
+/* ===================== TIMER ===================== */
+const overlay = document.getElementById('timerOverlay');
+const dialFg = document.getElementById('dialFg');
+const dialTime = document.getElementById('dialTime');
+const dialExName = document.getElementById('dialExName');
+const timerLabel = document.getElementById('timerLabel');
+const timerPhase = document.getElementById('timerPhase');
+const timerNext = document.getElementById('timerNext');
+const roundDotsEl = document.getElementById('roundDots');
+const timerControls = document.getElementById('timerControls');
+const amrapCounter = document.getElementById('amrapCounter');
+const amrapNum = document.getElementById('amrapNum');
+
+const CIRC = 2 * Math.PI * 88;
+dialFg.style.strokeDasharray = `${CIRC}`;
+
+let timerState = null; // { steps, idx, remaining, paused, intervalId }
+
+function buildSteps(weekNum, section) {
+  const w = WEEKS[weekNum];
+  const exList = w[section];
+  const rounds = section === 'finisher' ? w.finRounds : w.rounds;
+  const restBetween = w.rest;
+  const roundRest = section === 'finisher' ? Math.max(15, Math.round(w.roundRest * 0.4)) : w.roundRest;
+  const steps = [];
+  for (let r = 0; r < rounds; r++) {
+    exList.forEach((ex, i) => {
+      steps.push({ phase: 'work', label: ex.name, seconds: ex.seconds || w.work, round: r, exIdx: i });
+      const lastInRound = i === exList.length - 1;
+      if (!lastInRound) steps.push({ phase: 'rest', label: 'Rest', seconds: restBetween, round: r });
+    });
+    if (r < rounds - 1) steps.push({ phase: 'roundrest', label: 'Round Rest', seconds: roundRest, round: r });
+  }
+  return steps;
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function startCircuitTimer(weekNum, section) {
+  if (section === 'finisher' && weekNum === 6) {
+    openAmrap(WEEKS[weekNum]);
+    return;
+  }
+  pickDayThenStart(weekNum, section);
+}
+
+let dayPickerCallback = null;
+function pickDayThenStart(weekNum, section) {
+  dayPickerCallback = (day) => beginCircuitTimer(weekNum, section, day);
+  document.getElementById('dayPickerOverlay').classList.add('open');
+}
+document.getElementById('dayPickerOverlay').addEventListener('click', (e) => {
+  const btn = e.target.closest('.day-pick-btn');
+  const overlayEl = document.getElementById('dayPickerOverlay');
+  if (btn) {
+    const day = parseInt(btn.dataset.day, 10);
+    overlayEl.classList.remove('open');
+    const cb = dayPickerCallback;
+    dayPickerCallback = null;
+    if (cb) cb(day);
+  } else if (e.target.id === 'dayPickerCancel') {
+    overlayEl.classList.remove('open');
+    dayPickerCallback = null;
+  }
+});
+
+function beginCircuitTimer(weekNum, section, day) {
+  const sectionTitles = { circuitA: 'CIRCUIT A', circuitB: 'CIRCUIT B', finisher: 'FINISHER' };
+  timerLabel.textContent = `WEEK ${weekNum} — ${sectionTitles[section]} — DAY ${day}`;
+
+  const steps = buildSteps(weekNum, section);
+  timerState = { steps, idx: 0, remaining: steps[0].seconds, paused: false, total: steps[0].seconds, weekNum, section, day };
+  amrapCounter.style.display = 'none';
+  timerControls.style.display = 'flex';
+  overlay.classList.add('open');
+  renderDots(steps);
+  renderStep();
+  runTick();
+}
+
+function renderDots(steps) {
+  const rounds = [...new Set(steps.map(s => s.round))];
+  roundDotsEl.innerHTML = rounds.map(r => `<div class="round-dot" data-round="${r}"></div>`).join('');
+}
+
+function updateDots() {
+  const cur = timerState.steps[timerState.idx];
+  roundDotsEl.querySelectorAll('.round-dot').forEach(dot => {
+    const r = parseInt(dot.dataset.round, 10);
+    dot.classList.toggle('active', r === cur.round);
+    dot.classList.toggle('past', r < cur.round);
+  });
+}
+
+function renderStep() {
+  const step = timerState.steps[timerState.idx];
+  timerState.total = step.seconds;
+  timerState.remaining = step.seconds;
+  dialExName.textContent = step.label;
+  dialTime.textContent = fmtTime(step.seconds);
+  timerPhase.textContent = step.phase === 'work' ? 'WORK' : step.phase === 'rest' ? 'REST' : 'ROUND REST';
+  timerPhase.className = 'timer-phase ' + (step.phase === 'work' ? 'phase-work' : step.phase === 'rest' ? 'phase-rest' : 'phase-roundrest');
+  dialFg.style.stroke = step.phase === 'work' ? 'var(--sage)' : step.phase === 'rest' ? 'var(--ember)' : 'var(--brass)';
+  dialFg.style.strokeDashoffset = '0';
+  const next = timerState.steps[timerState.idx + 1];
+  timerNext.textContent = next ? `NEXT — ${next.label}` : 'FINAL STEP';
+  updateDots();
+}
+
+function runTick() {
+  clearInterval(timerState.intervalId);
+  timerState.intervalId = setInterval(() => {
+    if (timerState.paused) return;
+    timerState.remaining -= 1;
+    const frac = 1 - (timerState.remaining / timerState.total);
+    dialFg.style.strokeDashoffset = `${CIRC * frac}`;
+    dialTime.textContent = fmtTime(Math.max(0, timerState.remaining));
+    if (timerState.remaining <= 0) {
+      advanceStep();
+    } else if (timerState.remaining <= 5) {
+      countdownBleep();
+    }
+  }, 1000);
+}
+
+function advanceStep() {
+  const finishedStep = timerState.steps[timerState.idx];
+  clearInterval(timerState.intervalId);
+  beep();
+  const isLastStep = timerState.idx >= timerState.steps.length - 1;
+
+  const proceed = () => {
+    if (isLastStep) { finishTimer(); return; }
+    timerState.idx += 1;
+    renderStep();
+    runTick();
+  };
+
+  if (finishedStep.phase === 'work') {
+    showLogPopup(finishedStep, timerState.weekNum, timerState.section, timerState.day, proceed);
+  } else {
+    proceed();
+  }
+}
+
+/* ---- Per-exercise weight/reps popup, shown after every work step ---- */
+let logPopupContext = null;
+let logPopupResolve = null;
+
+async function showLogPopup(step, weekNum, section, day, onDone) {
+  const idx = step.exIdx;
+  const round = step.round + 1;
+  const key = `ex:w${weekNum}:d${day}:${section}:${idx}:r${round}`;
+  const existing = await loadVal(key);
+
+  document.getElementById('logPopupLabel').textContent = `${step.label} — Round ${round}`;
+  document.getElementById('logPopupDay').textContent = `Day ${day}`;
+  const wIn = document.getElementById('logPopupWeight');
+  const rIn = document.getElementById('logPopupReps');
+  wIn.value = existing && existing.weight ? existing.weight : '';
+  rIn.value = existing && existing.reps ? existing.reps : '';
+
+  logPopupContext = { key, section, idx, day, round };
+  logPopupResolve = onDone;
+  document.getElementById('logPopupOverlay').classList.add('open');
+  setTimeout(() => wIn.focus(), 60);
+}
+
+async function finishLogPopup(save) {
+  if (!logPopupContext) return;
+  const { key, section, idx, day, round } = logPopupContext;
+  if (save) {
+    const wIn = document.getElementById('logPopupWeight');
+    const rIn = document.getElementById('logPopupReps');
+    const weight = wIn.value;
+    const reps = rIn.value;
+    await saveVal(key, { weight, reps });
+    // reflect into the ledger on the underlying week page, if it's currently rendered
+    const liveW = app.querySelector(`input[data-kind="weight"][data-section="${section}"][data-idx="${idx}"][data-day="${day}"][data-round="${round}"]`);
+    const liveR = app.querySelector(`input[data-kind="reps"][data-section="${section}"][data-idx="${idx}"][data-day="${day}"][data-round="${round}"]`);
+    if (liveW) liveW.value = weight;
+    if (liveR) liveR.value = reps;
+  }
+  document.getElementById('logPopupOverlay').classList.remove('open');
+  const resolve = logPopupResolve;
+  logPopupContext = null;
+  logPopupResolve = null;
+  if (resolve) resolve();
+}
+
+document.getElementById('logPopupSave').addEventListener('click', () => finishLogPopup(true));
+document.getElementById('logPopupSkip').addEventListener('click', () => finishLogPopup(false));
+document.getElementById('logPopupWeight').addEventListener('keydown', (e) => { if (e.key === 'Enter') finishLogPopup(true); });
+document.getElementById('logPopupReps').addEventListener('keydown', (e) => { if (e.key === 'Enter') finishLogPopup(true); });
+
+function finishTimer() {
+  clearInterval(timerState.intervalId);
+  dialExName.textContent = 'Complete';
+  dialTime.textContent = '00:00';
+  timerPhase.textContent = 'DONE';
+  timerNext.textContent = 'Nice work.';
+  beep(); beep();
+  setTimeout(closeTimer, 1400);
+}
+
+function beep() {
+  try {
+    const ctx = beep._ctx || (beep._ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.start(); osc.stop(ctx.currentTime + 0.35);
+  } catch (e) {}
+}
+
+/* Short high-pitched bleep for the final 5-second countdown of any step */
+function countdownBleep() {
+  try {
+    const ctx = beep._ctx || (beep._ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = 1400;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.09, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start(); osc.stop(ctx.currentTime + 0.1);
+  } catch (e) {}
+}
+
+function closeTimer() {
+  overlay.classList.remove('open');
+  document.getElementById('logPopupOverlay').classList.remove('open');
+  logPopupContext = null;
+  logPopupResolve = null;
+  if (timerState) clearInterval(timerState.intervalId);
+  timerState = null;
+  if (amrapState) clearInterval(amrapState.intervalId);
+  amrapState = null;
+}
+
+document.getElementById('timerClose').addEventListener('click', closeTimer);
+document.getElementById('timerPause').addEventListener('click', (e) => {
+  if (!timerState) return;
+  timerState.paused = !timerState.paused;
+  e.target.textContent = timerState.paused ? 'RESUME' : 'PAUSE';
+});
+document.getElementById('timerSkip').addEventListener('click', () => {
+  if (!timerState) return;
+  timerState.remaining = 0;
+});
+document.getElementById('timerReset').addEventListener('click', () => {
+  if (!timerState) return;
+  renderStep();
+});
+
+/* ---- AMRAP mode (Week 6 finisher) ---- */
+let amrapState = null;
+const AMRAP_SECONDS = 9 * 60;
+
+function openAmrap(w) {
+  timerControls.style.display = 'none';
+  amrapCounter.style.display = 'flex';
+  overlay.classList.add('open');
+  roundDotsEl.innerHTML = '';
+  timerPhase.textContent = 'AMRAP';
+  timerPhase.className = 'timer-phase phase-work';
+  dialExName.textContent = 'Curl → Triceps → Carry → Plank';
+  timerNext.textContent = 'Tap + each time you complete a full round';
+  dialFg.style.stroke = 'var(--sage)';
+  amrapState = { remaining: AMRAP_SECONDS, total: AMRAP_SECONDS, rounds: 0, paused: false };
+  amrapNum.textContent = '0';
+  dialTime.textContent = fmtTime(AMRAP_SECONDS);
+  dialFg.style.strokeDashoffset = '0';
+  clearInterval(amrapState.intervalId);
+  amrapState.intervalId = setInterval(() => {
+    if (amrapState.paused) return;
+    amrapState.remaining -= 1;
+    const frac = 1 - (amrapState.remaining / amrapState.total);
+    dialFg.style.strokeDashoffset = `${CIRC * frac}`;
+    dialTime.textContent = fmtTime(Math.max(0, amrapState.remaining));
+    if (amrapState.remaining <= 0) {
+      clearInterval(amrapState.intervalId);
+      beep(); beep();
+      dialExName.textContent = `Time — ${amrapState.rounds} rounds complete`;
+      timerNext.textContent = 'Nice work.';
+      setTimeout(closeTimer, 1800);
+    } else if (amrapState.remaining <= 5) {
+      countdownBleep();
+    }
+  }, 1000);
+}
+document.getElementById('amrapPlus').addEventListener('click', () => {
+  if (!amrapState) return;
+  amrapState.rounds += 1;
+  amrapNum.textContent = amrapState.rounds;
+});
+document.getElementById('amrapMinus').addEventListener('click', () => {
+  if (!amrapState) return;
+  amrapState.rounds = Math.max(0, amrapState.rounds - 1);
+  amrapNum.textContent = amrapState.rounds;
+});
+
+/* ===================== PROGRESS PAGE ===================== */
+async function renderProgress() {
+  app.innerHTML = `
+    <div class="hero"><div><div class="hero-title">Progress</div><div class="hero-sub">Everything below is pulled from what you've logged on the week tabs.</div></div></div>
+    <div id="progressBody"><p class="empty-note">Loading…</p></div>
+  `;
+  const body = document.getElementById('progressBody');
+
+  const logKeys = await listKeys('log:');
+  const exKeys = await listKeys('ex:');
+
+  const logs = {};
+  for (const k of logKeys) { const v = await loadVal(k); if (v) logs[k] = v; }
+  const exData = {};
+  for (const k of exKeys) { const v = await loadVal(k); if (v) exData[k] = v; }
+
+  // completion rack
+  let sessionsLogged = 0;
+  const rackHtml = [1,2,3,4,5,6].map(week => {
+    const plates = [1,2,3].map(day => {
+      const key = `log:w${week}:d${day}`;
+      const v = logs[key];
+      const hasEx = Object.keys(exData).some(k => k.startsWith(`ex:w${week}:d${day}:`) && (exData[k].weight || exData[k].reps));
+      const filled = !!(v && (v.date || v.duration || v.bodyweight || v.rpe || v.notes)) || hasEx;
+      if (filled) sessionsLogged++;
+      return `<div class="plate ${filled ? 'filled' : ''}"><div class="plate-check">${filled ? '' : ''}</div><div class="plate-day">D${day}</div></div>`;
+    }).join('');
+    return `<div class="rack-week-label">WEEK ${week}</div><div class="rack">${plates}</div>`;
+  }).join('');
+
+  // key lift progression: circuitA idx 0 (Goblet Squat) and idx 1 (Bench Press)
+  function bestWeightForWeek(week, idx) {
+    let best = null;
+    const prefix = `ex:w${week}:d`;
+    for (const k of Object.keys(exData)) {
+      if (!k.startsWith(prefix)) continue;
+      if (!k.includes(`:circuitA:${idx}`)) continue;
+      const v = exData[k];
+      if (v && v.weight) {
+        const n = parseFloat(v.weight);
+        if (!isNaN(n) && (best === null || n > best)) best = n;
+      }
+    }
+    return best;
+  }
+  const squatSeries = [1,2,3,4,5,6].map(w => bestWeightForWeek(w, 0));
+  const benchSeries = [1,2,3,4,5,6].map(w => bestWeightForWeek(w, 1));
+  const hasLiftData = squatSeries.some(v => v !== null) || benchSeries.some(v => v !== null);
+
+  // weekly volume
+  function volumeForWeek(week) {
+    let total = 0;
+    for (const k of Object.keys(exData)) {
+      if (!k.startsWith(`ex:w${week}:d`)) continue;
+      const v = exData[k];
+      const wt = parseFloat(v.weight) || 0;
+      const rp = parseFloat(v.reps) || 0;
+      total += wt * rp;
+    }
+    return total;
+  }
+  const volumeSeries = [1,2,3,4,5,6].map(volumeForWeek);
+  const hasVolumeData = volumeSeries.some(v => v > 0);
+
+  body.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-box-value">${sessionsLogged}<span style="font-size:16px;color:var(--chalk-dim)">/18</span></div><div class="stat-box-label">Sessions Logged</div></div>
+      <div class="stat-box"><div class="stat-box-value">${Math.round((sessionsLogged/18)*100)}%</div><div class="stat-box-label">Programme Complete</div></div>
+      <div class="stat-box"><div class="stat-box-value">${Math.max(...volumeSeries, 0).toFixed(0)}</div><div class="stat-box-label">Peak Weekly Volume (kg·reps)</div></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Session Completion</div>
+      <div class="chart-sub">One plate per session across the 6-week block.</div>
+      ${rackHtml}
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Key Lift Progression</div>
+      <div class="chart-sub">Best logged weight per week — Goblet Squat &amp; Dumbbell Bench Press.</div>
+      ${hasLiftData ? renderLineChart(squatSeries, benchSeries) : '<p class="empty-note">Log a weight next to Goblet Squat or Dumbbell Bench Press on any week to see your trend here.</p>'}
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Weekly Training Volume</div>
+      <div class="chart-sub">Sum of logged weight × reps across Circuit A, B and the Finisher.</div>
+      ${hasVolumeData ? renderBarChart(volumeSeries) : '<p class="empty-note">Log weight and reps on any exercise to see weekly volume here.</p>'}
+    </div>
+  `;
+}
+
+function renderLineChart(seriesA, seriesB) {
+  const w = 640, h = 200, pad = 30;
+  const all = [...seriesA, ...seriesB].filter(v => v !== null);
+  const max = Math.max(10, ...all);
+  const min = 0;
+  const x = i => pad + (i / 5) * (w - pad * 2);
+  const y = v => h - pad - ((v - min) / (max - min)) * (h - pad * 2);
+
+  function pathFor(series) {
+    const pts = series.map((v, i) => v === null ? null : [x(i), y(v)]).filter(Boolean);
+    return pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  }
+  function dotsFor(series, color) {
+    return series.map((v, i) => v === null ? '' : `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${color}" />`).join('');
+  }
+
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(f => {
+    const yy = pad + f * (h - pad * 2);
+    return `<line x1="${pad}" y1="${yy}" x2="${w-pad}" y2="${yy}" stroke="#2A313B" stroke-width="1"/>`;
+  }).join('');
+  const xLabels = [1,2,3,4,5,6].map((wk, i) => `<text x="${x(i)}" y="${h-8}" fill="#A8ADB6" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">W${wk}</text>`).join('');
+
+  return `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto;">
+      ${gridLines}
+      <path d="${pathFor(seriesA)}" fill="none" stroke="#C9A15A" stroke-width="2.5"/>
+      ${dotsFor(seriesA, '#C9A15A')}
+      <path d="${pathFor(seriesB)}" fill="none" stroke="#6FA287" stroke-width="2.5"/>
+      ${dotsFor(seriesB, '#6FA287')}
+      ${xLabels}
+    </svg>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#C9A15A"></div>Goblet Squat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6FA287"></div>Dumbbell Bench Press</div>
+    </div>
+  `;
+}
+
+function renderBarChart(series) {
+  const w = 640, h = 200, pad = 30;
+  const max = Math.max(10, ...series);
+  const barW = (w - pad * 2) / 6 - 14;
+  const bars = series.map((v, i) => {
+    const bh = ((v / max) * (h - pad * 2)) || 0;
+    const bx = pad + i * ((w - pad * 2) / 6) + 7;
+    const by = h - pad - bh;
+    return `<rect x="${bx}" y="${by}" width="${barW}" height="${bh}" fill="#C9A15A" rx="2"/>
+      <text x="${bx + barW/2}" y="${h-8}" fill="#A8ADB6" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">W${i+1}</text>`;
+  }).join('');
+  const baseline = `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#3A4250" stroke-width="1"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto;">${baseline}${bars}</svg>`;
+}
+
+/* ===================== INIT ===================== */
+renderNav();
+setView('overview');
+</script>
+
+<div class="footer-note">IRON LEDGER — 6-WEEK PROGRAMME · DATA SAVED LOCALLY ON THIS COMPUTER · USE EXPORT TO BACK UP</div>
+
+</body>
+</html>
